@@ -1,52 +1,44 @@
 package com.example.clickrush.config;
 
 
+import com.example.clickrush.service.MyUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.stereotype.Component;
 
-@Component
+@Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    private final MyUserDetailsService myUserDetailsService;
+
+    public SecurityConfig(MyUserDetailsService myUserDetailsService) {
+        this.myUserDetailsService = myUserDetailsService;
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http){
 
-           http.csrf(customizer -> customizer.disable());
+           http.csrf(AbstractHttpConfigurer::disable);
            http.authorizeHttpRequests(request -> request.anyRequest().authenticated());
-//           http.formLogin(Customizer.withDefaults());
            http.httpBasic(Customizer.withDefaults());
 
            return http.build();
     }
 
     @Bean
-    public UserDetailsService userDetailsService(){
+    public AuthenticationProvider authenticationProvider(){
 
-        UserDetails user1 = User
-                .withDefaultPasswordEncoder()
-                .username("abh@123")
-                .password("benq@777")
-                .roles("USER")
-                .build();
-
-        UserDetails user2 = User
-                .withDefaultPasswordEncoder()
-                .username("riya@123")
-                .password("benq@777")
-                .roles("ADMIN")
-                .build();
-
-        return new InMemoryUserDetailsManager(user1, user2);
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(myUserDetailsService);
+        provider.setPasswordEncoder(NoOpPasswordEncoder.getInstance());
+        return provider;
     }
-
 
 }
