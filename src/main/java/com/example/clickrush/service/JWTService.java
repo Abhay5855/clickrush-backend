@@ -18,7 +18,7 @@ import java.util.Map;
 @Service
 public class JWTService {
 
-    private String secretKey = "";
+    private final String secretKey;
 
     public JWTService() {
 

@@ -27,10 +27,7 @@ public class UserService implements UserServiceImp {
         this.jwtService = jwtService;
     }
 
-    /**
-     * @param user
-     * @return
-     */
+
     @Override
     public User register(User user) {
         user.setPassword_hash(encoder.encode(user.getPassword_hash()));
@@ -39,7 +36,6 @@ public class UserService implements UserServiceImp {
 
     /**
      * @param user
-     * @return
      */
     @Override
     public String verify(User user) {
