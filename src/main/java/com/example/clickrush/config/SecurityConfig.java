@@ -4,33 +4,45 @@ package com.example.clickrush.config;
 import com.example.clickrush.service.MyUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private final JwtFilter jwtFilter;
+
     private final MyUserDetailsService myUserDetailsService;
 
-    public SecurityConfig(MyUserDetailsService myUserDetailsService) {
+    public SecurityConfig(JwtFilter jwtFilter, MyUserDetailsService myUserDetailsService) {
+        this.jwtFilter = jwtFilter;
         this.myUserDetailsService = myUserDetailsService;
     }
+
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http){
 
-           http.csrf(AbstractHttpConfigurer::disable);
-           http.authorizeHttpRequests(request -> request.anyRequest().authenticated());
-           http.httpBasic(Customizer.withDefaults());
-
-           return http.build();
+           return http.csrf(AbstractHttpConfigurer::disable)
+                   .authorizeHttpRequests(request -> request
+                   .requestMatchers("/register", "/login")
+                   .permitAll()
+                   .anyRequest().authenticated())
+                   .httpBasic(Customizer.withDefaults())
+                   .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                   .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                   .build();
     }
 
     @Bean
@@ -41,4 +53,9 @@ public class SecurityConfig {
         return provider;
     }
 
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) {
+
+        return config.getAuthenticationManager();
+    }
 }
