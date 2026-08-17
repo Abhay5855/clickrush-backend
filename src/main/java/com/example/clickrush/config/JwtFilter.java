@@ -6,8 +6,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Bean;
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,10 +21,11 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private final JWTService jwtService;
 
-    ApplicationContext context;
+    private final MyUserDetailsService myUserDetailsService;
 
-    public JwtFilter(JWTService jwtService) {
+    public JwtFilter(JWTService jwtService, MyUserDetailsService myUserDetailsService) {
         this.jwtService = jwtService;
+        this.myUserDetailsService = myUserDetailsService;
     }
 
 
@@ -41,7 +41,7 @@ public class JwtFilter extends OncePerRequestFilter {
      * @param filterChain
      */
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         String authHeader = request.getHeader("Authorization");
 
@@ -57,9 +57,9 @@ public class JwtFilter extends OncePerRequestFilter {
 
         if(email != null && SecurityContextHolder.getContext().getAuthentication() == null){
 
-            UserDetails userDetails = context.getBean(MyUserDetailsService.class).loadUserByUsername(email);
+            UserDetails userDetails = myUserDetailsService.loadUserByUsername(email);
 
-             if(jwtService.validateToken(token, userDetails)){
+            if(jwtService.validateToken(token, userDetails)){
 
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
